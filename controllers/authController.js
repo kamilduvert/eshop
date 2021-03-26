@@ -89,7 +89,7 @@ const authController = {
   refreshToken: async (req, res) => {
     try {
       const refresh_token = req.cookies.refreshToken;
-      if (refresh_token) return res.status(401).json({msg: "Please Log in now"});
+      if (!refresh_token) return res.status(401).json({msg: "Please Log in now"});
 
       const user = tokenManager.verifyRefreshToken(refresh_token);
       if (!user) return res.status(401).json({msg: "Problem with your refresh token"});
@@ -124,9 +124,10 @@ const authController = {
     try {
       const { password } = req.body;
       const { id } = req.user;
+
       const passwordHash = await bcrypt.hash(password, 12);
 
-      await user.userDataMapper.resetPassword(id, passwordHash);
+      await userDataMapper.updatePassword(id, passwordHash);
       res.status(201).json({msg: "Password successfully changed !"})
       
     } catch (error) {
