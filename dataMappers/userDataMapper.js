@@ -16,7 +16,7 @@ const userDataMapper = {
 
   },
 
-  createUser : async(name, email, password) => {
+  createUser : async (name, email, password) => {
     try {
       await pool.query(`INSERT INTO "user" (name, email, password) VALUES ($1, $2, $3)`, [
         name,
@@ -27,6 +27,21 @@ const userDataMapper = {
       
     } catch (error) {
       console.log(error.message)
+    }
+
+  },
+
+  updatePassword : async (id, password) => {
+    try {
+      await pool.query(`UPDATE "user" SET password=$1 WHERE id=$2`, [
+        id,
+        password
+      ])
+      return
+
+
+    } catch (error) {
+      
     }
 
   }

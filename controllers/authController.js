@@ -118,6 +118,20 @@ const authController = {
     } catch (error) {
       return res.status(500).json({msg: error.message});
     }
+  },
+
+  resetPassword: async (req, res) => {
+    try {
+      const { password } = req.body;
+      const { id } = req.user;
+      const passwordHash = await bcrypt.hash(password, 12);
+
+      await user.userDataMapper.resetPassword(id, passwordHash);
+      res.status(201).json({msg: "Password successfully changed !"})
+      
+    } catch (error) {
+      return res.status(500).json({msg: error.message});
+    }
   }
 
 };
