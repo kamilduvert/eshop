@@ -32,7 +32,7 @@ const authController = {
 
       sendConfirmationEmail(newUser, url)
 
-      res.json({msg: "Registration success ! Please activate your email to complete"})
+      res.status(200).json({msg: "Registration success ! Please activate your email to complete"})
       
     } catch (error) {
       return res.status(500).json({msg: error.message});
@@ -52,11 +52,34 @@ const authController = {
 
       await userDataMapper.createUser(name, email, password);
       
-      res.json({msg: "Account has been activated"});
+      res.status(201).json({msg: "Account has been activated"});
 
     } catch (error) {
       return res.status(500).json({msg: error.message});
       
+    }
+  },
+
+  login: async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const user = await userDataMapper.findOneByEmail(email);
+      if (!user) return res.status(401).json({msg: "Invalid Email or Password"});
+
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) return res.status(401).json({msg: "Invalid Email or Password"});
+
+      const refresh_token = tokenManager.generateRefreshToken({id: user.id});
+      res.cookie('refreshToken', refresh_token, {
+        httpOnly: true,
+        path: 'user/refresh_token',
+        maxAge: 7*24*60*60*1000 //7 days
+      });
+
+      res.status(200).json({msg: "Login Success"})
+      
+    } catch (error) {
+      return res.status(500).json({msg: error.message});
     }
   }
 
