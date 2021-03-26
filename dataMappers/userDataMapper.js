@@ -8,6 +8,15 @@ const userDataMapper = {
       return null;
     };
     return result.rows[0];
+  },
+
+  createUser : async(name, email, password) => {
+    await pool.query(`INSERT INTO "user" (name, email, password) VALUES ($1, $2, $3)`, [
+      name,
+      email,
+      password
+    ])
+    return
   }
 
 }
