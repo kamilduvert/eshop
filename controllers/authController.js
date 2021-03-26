@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 const userDataMapper = require('../dataMappers/userDataMapper');
 const tokenManager = require('../utils/tokenManager');
-const { sendConfirmationEmail } = require('../utils/confirmationEmail');
+const { sendConfirmationEmail, sendforgotPaswordEmail } = require('../utils/sendEmail');
 
 const CLIENT_URL = process.env.CLIENT_URL;
 
@@ -28,11 +28,11 @@ const authController = {
       };
 
       const activation_token = tokenManager.generateActivationToken(newUser);
-      const url = `${CLIENT_URL}/confirmation/${activation_token}`;
+      const url = `${CLIENT_URL}/user/activate/${activation_token}`;
 
-      sendConfirmationEmail(newUser, url)
+     sendConfirmationEmail(newUser, url);
 
-      res.status(200).json({msg: "Registration success ! Please activate your email to complete"})
+      res.status(200).json({msg: "Registration success ! Please activate your email to complete"});
       
     } catch (error) {
       return res.status(500).json({msg: error.message});
@@ -49,7 +49,7 @@ const authController = {
       const { name, email, password } = user;
 
       const existingUser = await userDataMapper.findOneByEmail(email);
-      if (existingUser) return res.status(400).json({msg: "This email already exists"});
+      if (existingUser) return res.status(409).json({msg: "This email already exists"});
 
       await userDataMapper.createUser(name, email, password);
       
@@ -97,6 +97,24 @@ const authController = {
       const access_token = tokenManager.generateAccessToken({id: user.id});
       res.status(200).json({msg: "New access-token generated", access_token})
       
+    } catch (error) {
+      return res.status(500).json({msg: error.message});
+    }
+  },
+
+  forgotPassword: async (req, res) => {
+    try {
+      const { email } = req.body;
+      const user = await userDataMapper.findOneByEmail(email);
+      if(!user) return res.status(404).json({msg: "This email does not exist."});
+
+      const access_token = tokenManager.generateAccessToken(user);
+      const url = `${CLIENT_URL}/user/reset-password/${access_token}`;
+
+      sendforgotPaswordEmail(user, url);
+
+      res.status(200).json({msg: "Password reset email has been sent, please check your mailbox !"});
+
     } catch (error) {
       return res.status(500).json({msg: error.message});
     }

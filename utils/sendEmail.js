@@ -7,7 +7,7 @@ const transport = nodemailer.createTransport(
   })
 );
 
-const sendConfirmationEmail = (user, url) => {
+exports.sendConfirmationEmail = (user, url) => {
   transport.sendMail({
     from: 'kduvert@gmail.com',
     to: `${user.name} <${user.email}>`,
@@ -24,6 +24,36 @@ const sendConfirmationEmail = (user, url) => {
       <p>See you soon !</p>
       </div>`
   }).then( () => {
+    return "Email sent";
+  }).catch(error => {
+    if (error.response) {
+      // Extract error msg
+      const {message, code, response} = error;
+      // Extract response msg
+      const {headers, body} = response;
+      console.error(body);
+      return null
+    }
+  });
+};
+
+exports.sendforgotPaswordEmail = (user, url) => {
+  transport.sendMail({
+    from: 'kduvert@gmail.com',
+    to: `${user.name} <${user.email}>`,
+    subject: 'Reset your password',
+    html: 
+      `<div style="max-width: 700px; margin:auto; border: 10px solid #ddd; padding: 50px 20px; font-size: 110%; text-align: center; ">
+      <h2 style="text-transform: uppercase;color: teal;">Forgot your Password ?</h2>
+      <p style="text-align: left;">
+          Just click the button below to change your password.
+      </p>
+      
+      <a href=${url} style="background: crimson; text-decoration: none; color: white; padding: 10px 20px; margin: 10px 0; display: inline-block;">Confirmer</a>
+
+      <p>See you back soon !</p>
+      </div>`
+  }).then( () => {
     console.log("Email sent");
   }).catch(error => {
     // Log friendly error
@@ -37,6 +67,4 @@ const sendConfirmationEmail = (user, url) => {
       console.error(body);
     }
   });
-}
-
-exports.sendConfirmationEmail = sendConfirmationEmail;
+};
