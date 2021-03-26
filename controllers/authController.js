@@ -69,10 +69,16 @@ const authController = {
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(401).json({msg: "Invalid Email or Password"});
 
+      const accessToken = tokenManager.generateAccessToken({id: user.id});
+      res.cookie('access_token', accessToken, {
+        httpOnly: true,
+        maxAge: 15*60*1000 //15min
+      });
+
       const refresh_token = tokenManager.generateRefreshToken({id: user.id});
       res.cookie('refreshToken', refresh_token, {
         httpOnly: true,
-        path: 'user/refresh_token',
+        path: 'api/auth/refresh_token',
         maxAge: 7*24*60*60*1000 //7 days
       });
 
