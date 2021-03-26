@@ -16,8 +16,11 @@ module.exports = tokenManager = {
 
   verifyActivationToken: (token) => {
     return jwt.verify(token, process.env.ACTIVATION_TOKEN_SECRET);
-  }
+  },
 
+  verifyRefreshToken: (token) => {
+    return jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+  },
 
 }
 

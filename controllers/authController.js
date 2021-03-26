@@ -44,6 +44,7 @@ const authController = {
     try {
       const { activation_token } = req.body;
       const user = tokenManager.verifyActivationToken(activation_token);
+      if (!user) return res.status(401).json({msg: "Problem with your activation token"});
       
       const { name, email, password } = user;
 
@@ -69,20 +70,32 @@ const authController = {
       const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) return res.status(401).json({msg: "Invalid Email or Password"});
 
-      const accessToken = tokenManager.generateAccessToken({id: user.id});
-      res.cookie('access_token', accessToken, {
-        httpOnly: true,
-        maxAge: 15*60*1000 //15min
-      });
-
+      // https://indepth.dev/posts/1382/localstorage-vs-cookies
       const refresh_token = tokenManager.generateRefreshToken({id: user.id});
       res.cookie('refreshToken', refresh_token, {
         httpOnly: true,
-        path: 'api/auth/refresh_token',
+        path: 'api/auth/refresh-token',
         maxAge: 7*24*60*60*1000 //7 days
       });
 
-      res.status(200).json({msg: "Login Success"})
+      const access_token = tokenManager.generateAccessToken({id: user.id});
+      res.status(200).json({msg: "Login Success", access_token})
+      
+    } catch (error) {
+      return res.status(500).json({msg: error.message});
+    }
+  },
+
+  refreshToken: async (req, res) => {
+    try {
+      const refresh_token = req.cookies.refreshToken;
+      if (refresh_token) return res.status(401).json({msg: "Please Log in now"});
+
+      const user = tokenManager.verifyRefreshToken(refresh_token);
+      if (!user) return res.status(401).json({msg: "Problem with your refresh token"});
+
+      const access_token = tokenManager.generateAccessToken({id: user.id});
+      res.status(200).json({msg: "New access-token generated", access_token})
       
     } catch (error) {
       return res.status(500).json({msg: error.message});
